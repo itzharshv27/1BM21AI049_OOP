@@ -1,0 +1,261 @@
+6A
+
+class WrongAge(Exception):
+    pass
+
+class AgeInvalid(Exception):
+    pass
+
+class Father:
+    def __init__(self, age):
+        if age < 0:
+            raise WrongAge("Age cannot be negative")
+        self.age = age
+
+class Son(Father):
+    def __init__(self, father_age, son_age):
+        super().__init__(father_age)
+        if son_age >= father_age:
+            raise AgeInvalid("Son's age should be less than father's age")
+        self.son_age = son_age
+
+# Example usage:
+try:
+    father_age = int(input("Enter father's age: "))
+    son_age = int(input("Enter son's age: "))
+
+    father = Father(father_age)
+    son = Son(father_age, son_age)
+
+    print("Father's age:", father.age)
+    print("Son's age:", son.son_age)
+
+except ValueError:
+    print("Invalid input! Please enter valid ages.")
+except WrongAge as e:
+    print("Error:", e)
+except AgeInvalid as e:
+    print("Error:", e)
+
+
+
+6(B)
+class FormulaError(Exception):
+    pass
+
+def calculate(formula):
+    try:
+        values = formula.split()
+        if len(values) != 3:
+            raise FormulaError("Invalid formula: Formula must consist of a number, an operator (+ or -), and another number separated by white space")
+        
+        num1 = float(values[0])
+        operator = values[1]
+        num2 = float(values[2])
+        
+        if operator not in ['+', '-']:
+            raise FormulaError("Invalid operator: Operator must be + or -")
+        
+        if operator == '+':
+            result = num1 + num2
+        elif operator == '-':
+            result = num1 - num2
+        
+        print("Result:", result)
+        
+    except ValueError:
+        raise FormulaError("Invalid value: Unable to convert to float")
+    except FormulaError as e:
+        print("FormulaError:", e)
+
+def main():
+    while True:
+        user_input = input("Enter formula (number operator number), or type 'quit' to exit: ")
+        if user_input.lower() == 'quit':
+            print("Exiting...")
+            break
+        try:
+            calculate(user_input)
+        except FormulaError as e:
+            print("FormulaError:", e)
+
+if __name__ == "__main__":
+    main()
+
+7.
+import pygame
+import sys
+
+# Initialize Pygame
+pygame.init()
+
+# Set up window
+WIDTH, HEIGHT = 400, 400
+WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Shapes Drawing")
+
+# Define colors
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+BLACK = (0, 0, 0)
+
+# Main loop
+while True:
+    WINDOW.fill((255, 255, 255))  # Fill background with white
+
+    # Draw polygon
+    pygame.draw.polygon(WINDOW, BLUE, [(146, 0), (291, 106), (236, 277), (56, 277), (0, 106)])
+
+    # Draw line
+    pygame.draw.line(WINDOW, GREEN, (60, 300), (120, 300), 4)
+
+    # Draw circle
+    pygame.draw.circle(WINDOW, GREEN, (300, 50), 20)
+
+    # Draw ellipse
+    pygame.draw.ellipse(WINDOW, BLACK, (300, 250, 40, 80), 1)
+
+    # Draw rectangle
+    pygame.draw.rect(WINDOW, BLACK, (150, 300, 100, 50))
+
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    pygame.display.update()
+8.
+
+import threading
+import random
+import time
+from queue import Queue
+
+# Function to generate a random integer every 1 second
+def generate_random(q):
+    while True:
+        random_int = random.randint(1, 100)
+        q.put(random_int)
+        time.sleep(1)
+
+# Function to compute the square of even numbers
+def compute_square(q):
+    while True:
+        num = q.get()
+        if num % 2 == 0:
+            print("Square of", num, "is", num**2)
+        q.task_done()
+
+# Function to compute the cube of odd numbers
+def compute_cube(q):
+    while True:
+        num = q.get()
+        if num % 2 != 0:
+            print("Cube of", num, "is", num**3)
+        q.task_done()
+
+def main():
+    # Create a queue to communicate between threads
+    q = Queue()
+
+    # Create and start the threads
+    thread1 = threading.Thread(target=generate_random, args=(q,))
+    thread2 = threading.Thread(target=compute_square, args=(q,))
+    thread3 = threading.Thread(target=compute_cube, args=(q,))
+
+    thread1.start()
+    thread2.start()
+    thread3.start()
+
+    # Join the threads to the main thread
+    thread1.join()
+    thread2.join()
+    thread3.join()
+
+if __name__ == "__main__":
+    main()
+9.
+
+import threading
+import time
+import random
+from queue import Queue
+
+# Vegetable types and their production times
+VEGETABLES = ['Tomato', 'Cucumber', 'Carrot']
+PRODUCTION_TIMES = {'Tomato': 3, 'Cucumber': 4, 'Carrot': 5}
+
+# Market capacity
+MARKET_CAPACITY = 10
+
+# Lock for accessing the market
+market_lock = threading.Lock()
+
+# Queue to represent the market
+market_queue = Queue(maxsize=MARKET_CAPACITY)
+
+# Function for farmers to produce vegetables
+def produce_vegetables():
+    while True:
+        vegetable = random.choice(VEGETABLES)
+        production_time = PRODUCTION_TIMES[vegetable]
+        time.sleep(production_time)
+        print(f"Farmer produced {vegetable}")
+        market_queue.put(vegetable)
+
+# Function for consumers to purchase vegetables
+def purchase_vegetables():
+    while True:
+        vegetable = random.choice(VEGETABLES)
+        with market_lock:
+            if vegetable in list(market_queue.queue):
+                market_queue.get()
+                print(f"Consumer purchased {vegetable}")
+            else:
+                print(f"No {vegetable} available. Consumer is waiting.")
+        time.sleep(2)
+
+# Start farmer and consumer threads
+farmer_thread = threading.Thread(target=produce_vegetables)
+consumer_thread = threading.Thread(target=purchase_vegetables)
+
+farmer_thread.start()
+consumer_thread.start()
+
+10.
+
+import threading
+import time
+
+# Global variable for synchronization
+lock = threading.Lock()
+
+# Function to print numbers from 1 to 5
+def function_A():
+    for num in range(1, 6):
+        time.sleep(1)  # Simulate time-consuming task
+        with lock:
+            print(num)
+
+# Function to print letters from 'A' to 'E'
+def function_B():
+    for char in ['A', 'B', 'C', 'D', 'E']:
+        time.sleep(1)  # Simulate time-consuming task
+        with lock:
+            print(char)
+
+# Create two threads, one for each function
+thread_A = threading.Thread(target=function_A)
+thread_B = threading.Thread(target=function_B)
+
+# Start both threads
+thread_A.start()
+thread_B.start()
+
+# Wait for both threads to complete their tasks
+thread_A.join()
+thread_B.join()
+
+print("Both threads have completed their tasks.")
+
